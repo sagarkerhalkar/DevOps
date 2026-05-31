@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Branching Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@gitgraph/js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 40px; 
+            background-color: #f4f4f9; 
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        #graph-container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 15px rgba(0,0,0,0.05); 
+            overflow-x: auto;
+        }
+        h2 { color: #2c3e50; }
+        p { line-height: 1.6; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>?? Git Branching Strategy: Visual Simulator</h2>
+        <p>This graph demonstrates a standard DevOps branching flow. Watch how the feature branches isolate the new shell scripts, and how the critical hotfix cascades back into the development stream.</p>
+        
+        <div id="graph-container"></div>
+    </div>
+
+    <script>
+        // 1. Target the container in the HTML
+        const graphContainer = document.getElementById("graph-container");
+
+        // 2. Initialize the Gitgraph with some basic styling
+        const gitgraph = GitgraphJS.createGitgraph(graphContainer, {
+            author: "DevOps Engineer <devops@local>",
+            commitMessage: "Auto-commit",
+            template: GitgraphJS.templateExtend("metro", {
+                commit: { message: { displayAuthor: false, displayHash: false } }
+            })
+        });
+
+        // ==========================================
+        // 3. SIMULATING THE REPOSITORY WORKFLOW
+        // ==========================================
+
+        // Step 1: Initialize the Main Branch (Production)
+        const main = gitgraph.branch("main");
+        main.commit("Initial commit: Setup AWS Resource Tracker base architecture");
+
+        // Step 2: Create the Integration Branch (Develop)
+        const develop = main.branch("develop");
+        develop.commit("Add base shell scripts for infrastructure tracking");
+
+        // Step 3: A developer starts a new feature
+        const feature1 = develop.branch("feature/ec2-listing-script");
+        feature1.commit("Write shell script to list active EC2 instances");
+        feature1.commit("Format script output to JSON format");
+
+        // Step 4: Meanwhile, another small update happens on develop
+        develop.commit("Update README with AWS CLI setup instructions");
+
+        // Step 5: The feature is complete and merged back to develop via Pull Request
+        develop.merge(feature1, "Merge pull request: EC2 listing feature");
+
+        // Step 6: Code is stable, ready for release!
+        const release = develop.branch("release/v1.0");
+        release.commit("Bump version to 1.0.0 and prepare release notes");
+
+        // Step 7: Release merged to Main (Shipped!) and synced back to Develop
+        main.merge(release, "Release v1.0.0 to Production ??");
+        main.tag("v1.0.0");
+        develop.merge(release, "Sync develop with release v1.0.0");
+
+        // Step 8: EMERGENCY! A bug is found in production.
+        const hotfix = main.branch("hotfix/s3-permission-bug");
+        hotfix.commit("Fix S3 bucket access denied error in main script");
+
+        // Step 9: The hotfix must be merged to BOTH main and develop
+        main.merge(hotfix, "Merge hotfix/s3-permission-bug into main");
+        main.tag("v1.0.1");
+        develop.merge(hotfix, "Cascade hotfix/s3-permission-bug into develop");
+
+    </script>
+</body>
+</html>
